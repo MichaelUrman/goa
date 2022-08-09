@@ -468,6 +468,8 @@ func NewMethodPayload(message *default_fieldspb.MethodRequest) *defaultfields.Me
 		Rat:  message.Rat,
 		Flt0: message.Flt0,
 		Flt1: message.Flt1,
+		Met0: time.Duration(message.Met0),
+		Meta: time.Duration(message.Meta),
 	}
 	if message.Opt != 0 {
 		v.Opt = &message.Opt
@@ -489,6 +491,10 @@ func NewMethodPayload(message *default_fieldspb.MethodRequest) *defaultfields.Me
 	}
 	if message.Flt1 == 0 {
 		v.Flt1 = 1
+	}
+	var zeroMessageMeta int64
+	if message.Meta == zeroMessageMeta {
+		v.Meta = 10000000000
 	}
 	return v
 }

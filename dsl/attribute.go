@@ -2,6 +2,8 @@ package dsl
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 
 	"goa.design/goa/v3/eval"
 	"goa.design/goa/v3/expr"
@@ -167,6 +169,19 @@ func Attribute(name string, args ...interface{}) {
 		}
 	}
 
+	// verify deferred defaults
+	if isImportedType(attr.DefaultValue) {
+		overrideType := attr.Meta["struct:field:type"]
+		if !isOfFieldType(attr.DefaultValue, overrideType) {
+			// verify compatibility on non-matching imported types
+			if attr.Type != nil && !attr.Type.IsCompatible(attr.DefaultValue) {
+				eval.ReportError("default value %#v is incompatible with attribute of type %s",
+					attr.DefaultValue, expr.QualifiedTypeName(attr.Type))
+				return
+			}
+		}
+	}
+
 	if obj, ok := parent.Type.(*expr.Object); ok {
 		obj.Set(name, attr)
 		return
@@ -252,7 +267,8 @@ func Default(def interface{}) {
 		eval.IncompatibleDSL()
 		return
 	}
-	if a.Type != nil && !a.Type.IsCompatible(def) {
+	// defer verification on imported types
+	if a.Type != nil && !a.Type.IsCompatible(def) && !isImportedType(def) {
 		eval.ReportError("default value %#v is incompatible with attribute of type %s",
 			def, expr.QualifiedTypeName(a.Type))
 		return
@@ -408,4 +424,27 @@ func parseAttributeArgs(baseAttr *expr.AttributeExpr, args ...interface{}) (expr
 	}
 
 	return dataType, description, fn
+}
+
+func isImportedType(v any) bool {
+	return v != nil && reflect.TypeOf(v).PkgPath() != ""
+}
+
+// isOfFieldType returns true if v is of the type specified in fieldType,
+// where fieldType contains a Meta("struct:field:type"):
+// []string{ typename, optional pkgpath, optional qualifier }
+func isOfFieldType(v any, fieldType []string) bool {
+	rt := reflect.TypeOf(v)
+	path := rt.PkgPath()
+	if len(fieldType) < 2 || path != fieldType[1] {
+		return false
+	}
+	if len(fieldType) < 1 {
+		return false
+	}
+	if _, name, cut := strings.Cut(fieldType[0], "."); cut {
+		return name == rt.Name()
+	} else {
+		return fieldType[0] == rt.Name()
+	}
 }

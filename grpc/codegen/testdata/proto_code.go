@@ -499,6 +499,8 @@ message MethodRequest {
 	double flt = 11;
 	double flt0 = 12;
 	double flt1 = 13;
+	sint64 met0 = 14;
+	sint64 meta = 15;
 }
 
 message MethodResponse {

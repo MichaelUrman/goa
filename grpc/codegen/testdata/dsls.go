@@ -1,6 +1,8 @@
 package testdata
 
 import (
+	"time"
+
 	. "goa.design/goa/v3/dsl"
 )
 
@@ -925,6 +927,14 @@ var DefaultFieldsDSL = func() {
 				Field(11, "flt", Float64)
 				Field(12, "flt0", Float64, func() { Default(0.0) })
 				Field(13, "flt1", Float64, func() { Default(1.0) })
+				Field(14, "met0", Int64, func() {
+					Default(0 * time.Second)
+					Meta("struct:field:type", "time.Duration", "time")
+				})
+				Field(15, "meta", Int64, func() {
+					Default(10 * time.Second)
+					Meta("struct:field:type", "time.Duration", "time")
+				})
 				Required("req", "reqs", "rat")
 			})
 			GRPC(func() {})

@@ -387,6 +387,8 @@ func NewProtoMethodRequest(payload *defaultfields.MethodPayload) *default_fields
 		Rat:  payload.Rat,
 		Flt0: payload.Flt0,
 		Flt1: payload.Flt1,
+		Met0: int64(payload.Met0),
+		Meta: int64(payload.Meta),
 	}
 	if payload.Opt != nil {
 		message.Opt = *payload.Opt
